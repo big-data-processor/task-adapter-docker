@@ -1,0 +1,26 @@
+{
+  "name": "@big-data-processor/task-adapter-docker",
+  "version": "0.8.11-next.5",
+  "description": "A general purpose adapter for Docker.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "Chi Yang",
+    "email": "chiyang1118@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@big-data-processor/task-adapter-base": "^0.8.20-next.10",
+    "@big-data-processor/utilities": "^0.8.8",
+    "path-is-inside": "^1.0.2"
+  },
+  "big-data-processor": {
+    "name": "Docker",
+    "type": "adapter",
+    "author": "Chi Yang",
+    "email": "chiyang1118@gmail.com",
+    "description": "A generic adapter for Docker on BDP"
+  }
+}

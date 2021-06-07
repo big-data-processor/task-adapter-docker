@@ -1,0 +1,125 @@
+# This is an incomplete template to configure the adapter.
+---
+cpus: "{{option.cpus}}"
+mem: "{% set memObj = option.mem | humanizeMemory %}{{ memObj.value }}{{ memObj.unit | lower }}"
+arg-recipe: |
+  - run
+  {{ "- -d" if option.detach else "- --rm" }}
+  # Setting if using the pseudo-tty
+  {% if option.tty %}
+  - -t
+  {% endif %}
+  - --log-driver=json-file
+  {% if option.stdin %}
+  - -i
+  {% endif %}
+  # Setting entrypoint
+  {% if option.entrypoint %}
+  - --entrypoint={{ option.entrypoint }}
+  {% endif %}
+  # Setting the projectFolder (/data) folder
+  {% if option.projectFolder and not option.skipProject %}
+  - -v
+  - {{ option.projectFolder | replace('\\\\', '/') }}:/project{{ (':' + option.projectMountOption) if option.projectMountOption }}
+  - -e
+  - PROJECT_FOLDER={{ option.projectFolder }}
+  {% endif %}
+  # Setting the share folder
+  {% if option.sharedFolder and not option.skipShared %}
+  - -v
+  - {{ option.sharedFolder | replace('\\\\', '/') }}:/shared{{ (':' + option.sharedMountOption) if option.sharedMountOption }}
+  - -e
+  - SHARED_FOLDER={{ option.sharedFolder }}
+  {% endif %}
+  # Setting package folder (/config)
+  {% if option.packageFolder and not option.skipPackage %}
+  - -v
+  - {{ option.packageFolder | replace('\\\\', '/') }}:/package{{ (':' + option.packageMountOption) if option.packageMountOption }}
+  - -e
+  - PACKAGE_FOLDER={{ option.packageFolder }}
+  {% endif %}
+  {% if option.volumeMappings %}
+  {% for volumeMap in option.volumeMappings %}
+  {% if volumeMap %}
+  - -v
+  - {{ volumeMap }}
+  {% endif %}
+  {% endfor %}
+  {% endif %}
+  {% if option.tmpfs %}
+  - --tmpfs
+  - {{ option.tmpfs }}
+  {% endif %}
+  # Setting shared memory
+  {% if option.shmSize %}
+  - --shm-size
+  - {{ option.shmSize }}
+  {% endif %}
+  # Setting environment variables
+  {% for envKey in option.env | _('keys') %}
+  - -e
+  - {{ envKey }}={{ option.env[envKey] }}
+  {% endfor %}
+  # Setting --workdir
+  {% if option.workdir %}
+  - --workdir
+  - {{ option.workdir }}
+  {% endif %}
+  {% if os.platform() !== 'win32' %}
+  #  Set --user if option.setUser is true (only valid in non win32 platform)
+  {% if not option.setUser %}
+  - -e
+  - HOST_USER_ID={{ os.userInfo().uid }}
+  - -e
+  - HOST_GROUP_ID={{ os.userInfo().gid }}
+  {% else %}
+  - --user
+  {% if option.user %}
+  - {{ option.user }}
+  {% else %}
+  - {{ os.userInfo().uid }}:{{ os.userInfo().gid }}
+  {% endif %}
+  {% endif %}
+  {% if option.net %}
+  - --net
+  - {{ option.net }}
+  {% endif %}
+  # Mapping external folders
+  {% if option.extFolders | _('isArray') %}
+  {% for extFolder in option.extFolders %}
+  - -v
+  - {{ extFolder }}:{{ extFolder }}
+  {% endfor %}
+  {% endif %}
+  {% endif %}
+  {% if jobObj.proxy and jobObj.proxy.containerPort %}
+  - -p
+  - {{ '127.0.0.1' if jobObj.proxy.ip === 'localhost' else jobObj.proxy.ip }}:{{ jobObj.proxy.port }}:{{ jobObj.proxy.containerPort }}
+  {% endif %}
+  {% if option.portMappings %}
+  {% for portMap in option.portMappings %}
+  {% if portMap %}
+  - -p
+  - {{portMap}}
+  {% endif %}
+  {% endfor %}
+  {% endif %}
+  # Specify computing resources
+  - --name
+  - {{ jobObj.jobId }}
+  - --cpus
+  - {{ jobObj.cpus }}
+  {% if option.gpus %}
+  - --gpus
+  - {{ option.gpus }}
+  {% endif %}
+  - --memory
+  - {{ jobObj.mem }}
+  - {{ jobObj.image }}
+  - {{ jobObj.exec }}
+  # Filling task arguments
+  {% for arg in jobObj.taskArgs %}
+  {% if (arg | trim) %}
+  - "\"{{ arg | trim | replace(r/\"/g, '\\"') }}\""
+  {% endif %}
+  {% endfor %}
