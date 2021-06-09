@@ -22,7 +22,7 @@ class BdpDockerAdapter extends BdpTaskAdapter {
     this.detach = this.options.detach && this.options.detach.toString() === 'true' ? true : false;
     this.options.stdoeMode = this.detach ? "watch" : "pipe";
   }
-  async beforeExit() {
+  async stopAllJobs() {
     const stopPromises = [];
     for (const jobId of this.runningJobs.keys()) {
       process.stderr.write("[" + new Date().toString() + "] Stop container: " + jobId + "\n");
@@ -36,6 +36,24 @@ class BdpDockerAdapter extends BdpTaskAdapter {
         stopPromises.length = 0;
       }
     }
+    await (Promise.all(stopPromises).catch(console.log));
+  }
+  async beforeExit() {
+    const rmPromises = [];
+    process.stderr.write("[" + new Date().toString() + "] Container cleanning up\n");
+    const allJobIds = this.getAllJobIds();
+    for (const jobId of allJobIds) {
+      rmPromises.push(
+        spawnProcessAsync(this.dockerPath, ['rm', jobId], 'remove-container', {mode: 'pipe', verbose: false, shell: true})
+          .then(proc => {
+            if (proc.exitCode !== 0) { throw 'error removing container'}
+          }).catch(console.log));
+      if (rmPromises.length >= 5) {
+        await (Promise.all(rmPromises).catch(console.log));
+        rmPromises.length = 0;
+      }
+    }
+    await (Promise.all(rmPromises).catch(console.log));
   }
   async determineJobProxy(jobObj) {
     if (!jobObj.proxy || !jobObj.proxy.containerPort) { return null; }
@@ -69,7 +87,6 @@ class BdpDockerAdapter extends BdpTaskAdapter {
       containerPort: jobObj.proxy.containerPort
     };
   }
-
   async jobDeploy(jobObj) {
     const jobId = jobObj.jobId;
     const runningJob = {
