@@ -55,6 +55,8 @@ arg-recipe: |
   - --shm-size
   - {{ option.shmSize }}
   {% endif %}
+  - -e
+  - BDP_JOB_ID={{ jobObj.jobId }}
   # Setting environment variables
   {% for envKey in option.env | _('keys') %}
   - -e
