@@ -79,10 +79,6 @@ class BdpDockerAdapter extends BdpTaskAdapter {
       jobEmitter: new EventEmitter,
       isRunning: false
     };
-    jobObj.stdout = path.join(jobObj.option.taskLogFolder, jobObj.taskName, jobId + "-stdout.txt").replace(/\\/g, "/");
-    jobObj.stderr = path.join(jobObj.option.taskLogFolder, jobObj.taskName, jobId + "-stderr.txt").replace(/\\/g, "/");
-    await fse.ensureFile(jobObj.stdout);
-    await fse.ensureFile(jobObj.stderr);
     const RunningProcess = child_process.spawn(this.dockerPath, jobObj.args, {
       cwd: jobObj.option.cwd || this.options.cwd || process.cwd(),
       shell: true,
