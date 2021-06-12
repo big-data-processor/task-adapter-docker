@@ -59,7 +59,7 @@ class BdpDockerAdapter extends BdpTaskAdapter {
     if (!jobObj.proxy || !jobObj.proxy.containerPort) { return null; }
     let thePort, theIP, requestCounter = 0;
     process.stdout.write(`[task-adapter-docker] Get the proxy port from docker ...\n`);
-    while (!thePort && requestCounter < 20 ) {
+    while (!thePort && requestCounter < 2*3600 ) {
       await sleep(500);
       const getPort = await spawnProcessAsync(this.dockerPath, ['port', jobObj.jobId, jobObj.proxy.containerPort], 'get-container-port', {mode: 'memory'});
       if (getPort.exitCode === 0) {
@@ -71,13 +71,12 @@ class BdpDockerAdapter extends BdpTaskAdapter {
       }
       requestCounter ++;
     }
-    if (thePort) {
-      process.stdout.write(`[task-adapter-docker] The port is ${thePort}\n`);
-    } else {
+    if (!thePort) {
       process.stdout.write(`[task-adapter-docker] Stop the web proxy for this result.\n`);
+      return null;
     }
-    thePort ? Object.assign({}, jobObj.proxy, {port: thePort, ip: theIP}) : null;
-    if (!thePort) { return null; }
+    process.stdout.write(`[task-adapter-docker] The port is ${thePort}\n`);
+    jobObj.proxy = Object.assign({}, jobObj.proxy, {port: thePort, ip: theIP})
     return {
       protocol: jobObj.proxy.protocol,
       ip: '127.0.0.1',
@@ -88,7 +87,6 @@ class BdpDockerAdapter extends BdpTaskAdapter {
     };
   }
   async jobDeploy(jobObj) {
-    const jobId = jobObj.jobId;
     const runningJob = {
       runningJobId: '',
       stdoutStream: null,
@@ -154,9 +152,7 @@ class BdpDockerAdapter extends BdpTaskAdapter {
     const currentDate = (new Date()).toISOString();
     let queryJobLog;
     if (jobObj.stdoeTimeStamp === undefined) {
-      queryJobLog = await spawnProcessAsync(this.dockerPath,
-        ['logs', jobId, '--until', currentDate.toString()],
-        'get-container-logs', {mode: 'memory'});
+      queryJobLog = await spawnProcessAsync(this.dockerPath, ['logs', jobId, '--until', currentDate.toString()], 'get-container-logs', {mode: 'memory'});
     } else {
       queryJobLog = await spawnProcessAsync(this.dockerPath, ['logs', jobId, '--since', jobObj.stdoeTimeStamp, '--until', currentDate.toString()], 'get-container-logs', {mode: 'memory'});
     }
