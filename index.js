@@ -59,7 +59,7 @@ class BdpDockerAdapter extends BdpTaskAdapter {
     if (!jobObj.proxy || !jobObj.proxy.containerPort) { return null; }
     let thePort, theIP, requestCounter = 0;
     process.stdout.write(`[task-adapter-docker] Get the proxy port from docker ...\n`);
-    while (!thePort && requestCounter < 2*3600 ) {
+    while (!thePort && requestCounter < 2*600 && !this.isStopping ) {
       await sleep(500);
       const getPort = await spawnProcessAsync(this.dockerPath, ['port', jobObj.jobId, jobObj.proxy.containerPort], 'get-container-port', {mode: 'memory'});
       if (getPort.exitCode === 0) {
