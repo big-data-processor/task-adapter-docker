@@ -46,7 +46,7 @@ class BdpDockerAdapter extends BdpTaskAdapter {
       rmPromises.push(
         spawnProcessAsync(this.dockerPath, ['rm', jobId], 'remove-container', {mode: 'pipe', verbose: false, shell: true})
           .then(proc => {
-            if (proc.exitCode !== 0) { throw 'error removing container'}
+            if (proc.exitCode !== 0) { throw `error removing container ${jobId}`; }
           }).catch(console.log));
       if (rmPromises.length >= 5) {
         await (Promise.all(rmPromises).catch(console.log));
@@ -59,7 +59,7 @@ class BdpDockerAdapter extends BdpTaskAdapter {
     if (!jobObj.proxy || !jobObj.proxy.containerPort) { return null; }
     let thePort, theIP, requestCounter = 0;
     process.stdout.write(`[task-adapter-docker] Get the proxy port from docker ...\n`);
-    while (!thePort && requestCounter < 2*600 && !this.isStopping ) {
+    while (!thePort && requestCounter < 2*600) {
       await sleep(500);
       const getPort = await spawnProcessAsync(this.dockerPath, ['port', jobObj.jobId, jobObj.proxy.containerPort], 'get-container-port', {mode: 'memory'});
       if (getPort.exitCode === 0) {
