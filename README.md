@@ -1,2 +1,2 @@
-This is the Docker adapter for BD-Processor
-===========================================
+The Docker adapter for BD-Processor
+===================================
