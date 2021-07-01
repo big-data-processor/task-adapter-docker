@@ -27,10 +27,8 @@ class BdpDockerAdapter extends BdpTaskAdapter {
     for (const jobId of this.runningJobs.keys()) {
       process.stderr.write("[" + new Date().toString() + "] Stop container: " + jobId + "\n");
       stopPromises.push(
-        spawnProcessAsync(this.dockerPath, ['stop', jobId], 'stop-container', {mode: 'pipe', verbose: false, shell: true})
-          .then(proc => {
-            if (proc.exitCode !== 0) { throw 'error stopping container'}
-          }).catch(() => this.emitJobStatus(jobId, -2, null)));
+        spawnProcessAsync(this.dockerPath, ['stop', jobId], 'stop-container', {mode: 'memory', verbose: false, shell: true})
+          .then(proc => proc.exitCode !== 0 ? this.emitJobStatus(jobId, -2, null) : '').catch(console.log));
       if (stopPromises.length >= 5) {
         await (Promise.all(stopPromises).catch(console.log));
         stopPromises.length = 0;
@@ -44,10 +42,7 @@ class BdpDockerAdapter extends BdpTaskAdapter {
     const allJobIds = this.getAllJobIds();
     for (const jobId of allJobIds) {
       rmPromises.push(
-        spawnProcessAsync(this.dockerPath, ['rm', jobId], 'remove-container', {mode: 'pipe', verbose: false, shell: true})
-          .then(proc => {
-            if (proc.exitCode !== 0) { throw `error removing container ${jobId}`; }
-          }).catch(console.log));
+        spawnProcessAsync(this.dockerPath, ['rm', jobId], 'remove-container', {mode: 'memory', verbose: false, shell: true}).catch(console.log));
       if (rmPromises.length >= 5) {
         await (Promise.all(rmPromises).catch(console.log));
         rmPromises.length = 0;
@@ -59,7 +54,7 @@ class BdpDockerAdapter extends BdpTaskAdapter {
     if (!jobObj.proxy || !jobObj.proxy.containerPort) { return null; }
     let thePort, theIP, requestCounter = 0;
     process.stdout.write(`[task-adapter-docker] Get the proxy port from docker ...\n`);
-    while (!thePort && requestCounter < 2*600) {
+    while (!thePort && requestCounter < 2*1800) {
       await sleep(500);
       const getPort = await spawnProcessAsync(this.dockerPath, ['port', jobObj.jobId, jobObj.proxy.containerPort], 'get-container-port', {mode: 'memory'});
       if (getPort.exitCode === 0) {
@@ -92,7 +87,7 @@ class BdpDockerAdapter extends BdpTaskAdapter {
       stdoutStream: null,
       stderrStream: null,
       jobEmitter: new EventEmitter,
-      isRunning: false
+      isRunning: this.detach ? false : true
     };
     const RunningProcess = child_process.spawn(this.dockerPath, jobObj.args, {
       cwd: jobObj.option.cwd || this.options.cwd || process.cwd(),
