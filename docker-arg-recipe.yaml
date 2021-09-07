@@ -46,6 +46,10 @@ arg-recipe: |
   {% endif %}
   {% endfor %}
   {% endif %}
+  {% if option.pull %}
+  - --pull
+  - {{ option.pull }}
+  {% endif %}
   {% if option.tmpfs %}
   - --tmpfs
   - {{ option.tmpfs }}
