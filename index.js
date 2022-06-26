@@ -96,7 +96,9 @@ class BdpDockerAdapter extends BdpTaskAdapter {
     });
     runningJob.runningJobId = RunningProcess.pid;
     if (!this.detach) {
-      RunningProcess.on("exit", (code, signal) => this.emitJobStatus(jobObj.jobId, code, signal).catch(console.log));
+      RunningProcess.on("exit", (code, signal) => {
+        setTimeout(() => this.emitJobStatus(jobObj.jobId, code, signal).catch(console.log));
+      });
       runningJob.stdoutStream = RunningProcess.stdout;
       runningJob.stderrStream = RunningProcess.stderr;
     }
