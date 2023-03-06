@@ -1,6 +1,6 @@
 {
   "name": "@big-data-processor/task-adapter-docker",
-  "version": "0.9.19",
+  "version": "0.10.3",
   "description": "A general purpose adapter for Docker.",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@big-data-processor/task-adapter-base": "^0.9.19",
+    "@big-data-processor/task-adapter-base": "^0.10.3",
     "@big-data-processor/utilities": "^0.9.1"
   },
   "big-data-processor": {
