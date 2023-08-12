@@ -1,6 +1,6 @@
 {
   "name": "@big-data-processor/task-adapter-docker",
-  "version": "0.10.3",
+  "version": "0.10.3-patch.2",
   "description": "A general purpose adapter for Docker.",
   "main": "index.js",
   "scripts": {

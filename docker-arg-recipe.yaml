@@ -110,6 +110,10 @@ arg-recipe: |
   {% endif %}
   {% endfor %}
   {% endif %}
+  # Spport --runtime option
+  {% if option.runtime %}
+  - --runtime={{ option.runtime }}
+  {% endif %}
   # Specify computing resources
   - --name
   - {{ jobObj.jobId }}
